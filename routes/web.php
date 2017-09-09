@@ -11,8 +11,12 @@
 |
 */
 
-Route::get('/', 'HomeController@home');
+Route::get('/', 'HomeController@index');
 // Route::get('/login', 'HomeController@showLogin');
 // Route::post('/login', 'HomeController@doLogin');
 // Route::get('/register', 'HomeController@showRegister');
 // Route::post('/register', 'HomeController@doRegister');
+
+Auth::routes();
+
+Route::get('/home', 'HomeController@index')->name('home');
