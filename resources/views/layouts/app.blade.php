@@ -9,8 +9,9 @@
 
   <!-- Fonts -->
   <link href="https://fonts.googleapis.com/css?family=Raleway:100,600" rel="stylesheet" type="text/css">
-  <link href="css/app.css" rel="stylesheet">
-  <link href="css/custom-style.css" rel="stylesheet">
+  <link href="{{ asset('css/app.css') }}" rel="stylesheet">
+  <link href="{{ asset('css/custom-style.css') }}" rel="stylesheet">
+  @yield('css')  
 
 </head>
 <body>
@@ -35,12 +36,16 @@
           <li>
             <a href="{{ url('users') }}">Users</a>
           </li>
-          <li>
-            <a href="{{ url('login') }}">Login</a>
-          </li>
-          <li>
-            <a href="{{ url('register') }}">Register</a>
-          </li>
+
+          @if (Auth::guest())
+            <li>
+              <a href="{{ url('login') }}">Login</a>
+            </li>
+            <li>
+              <a href="{{ url('register') }}">Register</a>
+            </li>
+          @endif
+          
         </ul>
       </div>
       <!-- /.navbar-collapse -->
@@ -64,7 +69,9 @@
     </footer>
 
   </div>
-
+  <!-- Scripts -->
+  <script src="{{ asset('js/app.js') }}"></script>
+  @yield('script')
 </body>
 </html>
 

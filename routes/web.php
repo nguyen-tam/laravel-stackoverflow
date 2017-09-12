@@ -12,10 +12,10 @@
 */
 
 Route::get('/', 'HomeController@index');
-// Route::get('/login', 'HomeController@showLogin');
-// Route::post('/login', 'HomeController@doLogin');
-// Route::get('/register', 'HomeController@showRegister');
-// Route::post('/register', 'HomeController@doRegister');
+
+Route::get('/questions/ask', 'QuestionController@showAsk');
+Route::post('/questions/ask', 'QuestionController@ask')->name('questions.ask');
+Route::get('/questions/{id}/{slug}', 'QuestionController@showQuestionDetail');
 
 Auth::routes();
 
