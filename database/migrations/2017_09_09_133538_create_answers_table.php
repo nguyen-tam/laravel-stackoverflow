@@ -16,7 +16,7 @@ class CreateAnswersTable extends Migration
         Schema::create('answers', function (Blueprint $table) {
             $table->increments('id');
             $table->text('content');
-            $table->integer('answer_id');
+            $table->integer('answer_id')->default(0);
             $table->integer('question_id');
             $table->integer('up_vote')->default(0);
             $table->integer('down_vote')->default(0);

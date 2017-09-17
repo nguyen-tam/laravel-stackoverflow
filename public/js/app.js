@@ -785,11 +785,7 @@ window.Vue = __webpack_require__(37);
  * or customize the JavaScript scaffolding to fit your unique needs.
  */
 
-Vue.component('example', __webpack_require__(34));
-
-var app = new Vue({
-  el: '#app'
-});
+Vue.component('question-detail', __webpack_require__(34));
 
 /***/ }),
 /* 9 */
@@ -1660,11 +1656,100 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 
 /* harmony default export */ __webpack_exports__["default"] = ({
-    mounted: function mounted() {
-        console.log('Component mounted.');
-    }
+    data: function data() {
+        return {
+            question: [],
+            answers: []
+        };
+    },
+    created: function created() {
+        this.fetchQuestionData();
+        this.fetchAnswers();
+    },
+
+    methods: {
+        fetchQuestionData: function fetchQuestionData() {
+            var _this = this;
+
+            axios.get('/api/question/' + this.question_id).then(function (res) {
+                _this.question = res.data;
+            });
+        },
+        fetchAnswers: function fetchAnswers() {
+            var _this2 = this;
+
+            axios.get('/api/answers/' + this.question_id).then(function (res) {
+                _this2.answers = res.data;
+            });
+        },
+
+        voteQuestion: function voteQuestion(question_id, type) {
+            var _this3 = this;
+
+            // alert(id);
+            axios.post('/api/vote_question', {
+                question_id: question_id,
+                type: type
+            }).then(function (res) {
+                _this3.answers = res.data;
+            });
+        }
+    },
+    props: ['question_id']
 });
 
 /***/ }),
@@ -31664,9 +31749,9 @@ var Component = __webpack_require__(35)(
   /* cssModules */
   null
 )
-Component.options.__file = "G:\\vagrant-php-nginx\\php-stackoverflow\\resources\\assets\\js\\components\\Example.vue"
+Component.options.__file = "G:\\vagrant-php-nginx\\phpoverflow\\resources\\assets\\js\\components\\question_detail.vue"
 if (Component.esModule && Object.keys(Component.esModule).some(function (key) {return key !== "default" && key !== "__esModule"})) {console.error("named exports are not supported in *.vue files.")}
-if (Component.options.functional) {console.error("[vue-loader] Example.vue: functional components are not supported with templates, they should use render functions.")}
+if (Component.options.functional) {console.error("[vue-loader] question_detail.vue: functional components are not supported with templates, they should use render functions.")}
 
 /* hot reload */
 if (false) {(function () {
@@ -31675,9 +31760,9 @@ if (false) {(function () {
   if (!hotAPI.compatible) return
   module.hot.accept()
   if (!module.hot.data) {
-    hotAPI.createRecord("data-v-2d6d465d", Component.options)
+    hotAPI.createRecord("data-v-10df12b8", Component.options)
   } else {
-    hotAPI.reload("data-v-2d6d465d", Component.options)
+    hotAPI.reload("data-v-10df12b8", Component.options)
   }
 })()}
 
@@ -31746,27 +31831,75 @@ module.exports = function normalizeComponent (
 /***/ (function(module, exports, __webpack_require__) {
 
 module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;
-  return _vm._m(0)
-},staticRenderFns: [function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;
-  return _c('div', {
-    staticClass: "container"
+  return _c('div', [_c('div', {
+    staticClass: "row question-info"
   }, [_c('div', {
+    staticClass: "col-lg-2"
+  }, [_c('p', {
+    on: {
+      "click": function($event) {
+        _vm.voteQuestion(_vm.question.id, 'up')
+      }
+    }
+  }, [_c('i', {
+    staticClass: "fa fa-sort-asc fa-3x"
+  })]), _vm._v(" "), _c('h3', [_vm._v(_vm._s(_vm.question.up_vote - _vm.question.down_vote))]), _vm._v(" "), _vm._m(0)]), _vm._v(" "), _c('div', {
+    staticClass: "col-lg-10"
+  }, [_c('div', [_vm._v(_vm._s(_vm.question.content))]), _vm._v(" "), _c('div', {
+    staticClass: "author-info pull-right"
+  }, [_c('p', [_vm._v("asked " + _vm._s(_vm.question.created_at))]), _vm._v(" "), _c('p', [_vm._v("by " + _vm._s(_vm.question.asked_user))])])])]), _vm._v(" "), _c('div', {
+    staticClass: "row answers-count"
+  }, [_c('div', {
+    staticClass: "col-lg-12"
+  }, [_c('h3', [_vm._v(_vm._s(_vm.answers.length) + " answers")])])]), _vm._v(" "), _c('div', {
     staticClass: "row"
   }, [_c('div', {
-    staticClass: "col-md-8 col-md-offset-2"
+    staticClass: "col-lg-12 answers-info"
+  }, _vm._l((_vm.answers), function(answer) {
+    return _c('div', {
+      staticClass: "row"
+    }, [_c('div', {
+      staticClass: "col-lg-2"
+    }, [_vm._m(1, true), _vm._v(" "), _c('h3', [_vm._v(_vm._s(answer.up_vote - answer.down_vote))]), _vm._v(" "), _vm._m(2, true)]), _vm._v(" "), _c('div', {
+      staticClass: "col-lg-10"
+    }, [_c('div', [_vm._v(_vm._s(answer.content))]), _vm._v(" "), _c('div', {
+      staticClass: "author-info pull-right"
+    }, [_c('p', [_vm._v("answered " + _vm._s(answer.created_at))]), _vm._v(" "), _c('p', [_vm._v("by " + _vm._s(answer.user.name))])])]), _vm._v(" "), _vm._l((answer.children), function(comment) {
+      return _c('div', {
+        staticClass: "row comments"
+      }, [_c('div', {
+        staticClass: "col-lg-offset-2 col-lg-10"
+      }, [_c('p', [_vm._v(_vm._s(comment.content) + " \n                            - "), _c('span', {
+        staticClass: "commented-by"
+      }, [_vm._v(_vm._s(comment.user.name))]), _vm._v(" "), _c('span', {
+        staticClass: "commented-at"
+      }, [_vm._v(_vm._s(comment.created_at))])])])])
+    }), _vm._v(" "), _vm._m(3, true), _vm._v(" "), _c('br')], 2)
+  }))])])
+},staticRenderFns: [function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;
+  return _c('p', [_c('i', {
+    staticClass: "fa fa-sort-desc fa-3x"
+  })])
+},function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;
+  return _c('p', [_c('i', {
+    staticClass: "fa fa-sort-asc fa-3x"
+  })])
+},function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;
+  return _c('p', [_c('i', {
+    staticClass: "fa fa-sort-desc fa-3x"
+  })])
+},function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;
+  return _c('div', {
+    staticClass: "row"
   }, [_c('div', {
-    staticClass: "panel panel-default"
-  }, [_c('div', {
-    staticClass: "panel-heading"
-  }, [_vm._v("Example Component")]), _vm._v(" "), _c('div', {
-    staticClass: "panel-body"
-  }, [_vm._v("\n                    I'm an example component!\n                ")])])])])])
+    staticClass: "col-lg-offset-2 col-lg-10"
+  }, [_c('p', [_vm._v("add a comment")])])])
 }]}
 module.exports.render._withStripped = true
 if (false) {
   module.hot.accept()
   if (module.hot.data) {
-     require("vue-hot-reload-api").rerender("data-v-2d6d465d", module.exports)
+     require("vue-hot-reload-api").rerender("data-v-10df12b8", module.exports)
   }
 }
 

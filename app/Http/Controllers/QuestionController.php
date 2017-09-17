@@ -5,10 +5,11 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Input;
 use App\Question;
+use App\Answer;
 
 use Config;
 use Auth;
-
+use Response;
 class QuestionController extends Controller
 {
     /**
@@ -16,10 +17,10 @@ class QuestionController extends Controller
      *
      * @return void
      */
-    public function __construct()
-    {
-        $this->middleware('auth');
-    }
+    // public function __construct()
+    // {
+    //     $this->middleware('auth');
+    // }
 
     public function showAsk()
     {
@@ -51,21 +52,56 @@ class QuestionController extends Controller
     	return redirect($question_url);
     }
 
+    public function getQuestionById($id)
+    {
+        $question = Question::find($id);
+        $question->asked_user = ($question->user)['name'];
+        return Response::json($question);
+    }
+
+    public function voteQuestion() {
+        $question_id = Input::get('question_id');
+        $type = Input::get('type');
+
+        return Response::json($question_id);
+    }
+
+    public function getAnswersById($questionId){
+        
+      $answers = Answer::with(array('children'=>function($query){
+                    $query
+                    ->with(array('user'=>function($query1){
+                                  $query1->select('*');
+                              }))->select('*');
+                }))
+                ->with(array('user'=>function($query){
+                              $query->select('*');
+                          }))
+                ->where('answers.question_id', $questionId)
+                ->orderBy('answers.status', 'desc')
+                ->orderBy('answers.created_at', 'desc')
+                ->get();
+
+      return Response::json($answers);
+    }
+
     public function showQuestionDetail($id,$slug) {
-    	var_dump($id);
 
     	$currentUserId = 0;
 
     	if(Auth::user()){
         	$currentUserId = Auth::user()->id;
-        	$isPermissionApprove = Auth::user()->hasRole('teacher');
       	}
 
       	$question = Question::find($id);
      	
      	if($question){
-        	$question->views_count += 1;
+        	$question->views++;
         	$question->save();
       	}
+
+        return view('question.detail', ['question' => $question,
+                                        'currentUserId' => $currentUserId,
+                                        'isLogin' => $currentUserId > 0]);
     }
 }
