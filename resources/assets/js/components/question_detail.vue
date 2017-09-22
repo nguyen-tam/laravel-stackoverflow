@@ -2,9 +2,13 @@
     <div>        
         <div class="row question-info">
             <div class="col-lg-2">
-                <p v-on:click="voteQuestion(question.id, 'up')"><i class="fa fa-sort-asc fa-3x"></i></p>
+                <p v-on:click="voteQuestion(question.id, constants.vote_type.UP_VOTE ,constants.vote_category.QUESTION)">
+                    <i v-bind:class="{voted:question.up_voted}" class="fa fa-sort-asc fa-3x"></i>
+                </p>
                 <h3>{{ question.up_vote - question.down_vote }}</h3>
-                <p><i class="fa fa-sort-desc fa-3x"></i></p>            
+                <p v-on:click="voteQuestion(question.id, constants.vote_type.DOWN_VOTE, constants.vote_category.QUESTION)">
+                    <i v-bind:class="{voted:question.down_voted}" class="fa fa-sort-desc fa-3x"></i>
+                </p>            
             </div>
             <div class="col-lg-10">            
                 <div>{{ question.content }}</div>
@@ -66,6 +70,11 @@
     </div>
 </template>
 
+<style type="text/css">
+    .voted {
+        color: #f48024;
+    }
+</style>
 <script>
     export default {
 
@@ -73,13 +82,22 @@
             return {
                 question: [],
                 answers: [],
+                isActive: 'red',
+                constants: []
             };
         },
         created() {
             this.fetchQuestionData();
             this.fetchAnswers();
+            this.fetchConstants();
         },
         methods: {
+
+            fetchConstants() {
+                axios.get('/api/get_constant/').then((res) => {
+                    this.constants = res.data;
+                });
+            },
             fetchQuestionData() {
                 axios.get('/api/question/' + this.question_id).then((res) => {
                     this.question = res.data;
@@ -91,14 +109,36 @@
                     this.answers = res.data;
                 });
             },
-            voteQuestion: function (question_id, type) {
-                // alert(id);
-                axios.post('/api/vote_question', {
+            resetUpVoteDownVote() {
+                this.question.down_voted = false;
+                this.question.up_voted = false;
+            },
+            voteQuestion: function (question_id, type, vote_category) {
+
+                axios.post('/vote_question', {
                     question_id : question_id,
-                    type: type
+                    type: type,
+                    vote_category: vote_category
                 })
                 .then((res) => {
-                    this.answers = res.data;
+                    if (res.data.status) {
+
+                        if (type == this.constants.vote_type.UP_VOTE) {
+                            this.question.up_vote++;
+                            this.resetUpVoteDownVote();
+                            this.question.up_voted = true;    
+                        } else {
+                            this.question.down_vote++;
+                            this.resetUpVoteDownVote();
+                            this.question.down_voted = true;
+                        }
+                        
+                    }
+                })
+                .catch((err) => {
+                    if (err.response.status == 401) {
+                        alert("You must login before using this function");
+                    }
                 });
             }
         },

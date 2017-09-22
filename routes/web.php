@@ -20,3 +20,5 @@ Route::get('/questions/{id}/{slug}', 'QuestionController@showQuestionDetail');
 Auth::routes();
 
 Route::get('/home', 'HomeController@index')->name('home');
+
+Route::post('/vote_question', 'QuestionAPIController@voteQuestion');

@@ -56,15 +56,12 @@ class QuestionController extends Controller
     {
         $question = Question::find($id);
         $question->asked_user = ($question->user)['name'];
+
+        // TODO check user upvoted, down voted or not
+        $question->up_voted = false;
+        $question->down_voted = false;
         return Response::json($question);
-    }
-
-    public function voteQuestion() {
-        $question_id = Input::get('question_id');
-        $type = Input::get('type');
-
-        return Response::json($question_id);
-    }
+    }    
 
     public function getAnswersById($questionId){
         

@@ -19,4 +19,4 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 
 Route::get('/question/{id}', 'QuestionController@getQuestionById');
 Route::get('/answers/{id}', 'QuestionController@getAnswersById');
-Route::post('/vote_question', 'QuestionController@voteQuestion');
+Route::get('/get_constant', 'ConstantAPIController@get');

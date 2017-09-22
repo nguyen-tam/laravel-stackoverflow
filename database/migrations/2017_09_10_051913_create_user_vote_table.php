@@ -16,7 +16,7 @@ class CreateUserVoteTable extends Migration
         Schema::create('user_vote', function (Blueprint $table) {
             $table->increments('id');
             $table->integer('vote_category')->comment('0 - question, 1 - answer, 2 - comment');;
-            $table->integer('vote_type')->comment('0 - vote, 1 - downvote');;
+            $table->integer('vote_type')->comment('1 - upvote, 0 - downvote');;
             $table->integer('vote_id');
             $table->integer('vote_by');         
             $table->timestamps();
