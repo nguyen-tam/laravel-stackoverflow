@@ -18,8 +18,6 @@ class CreateAnswersTable extends Migration
             $table->text('content');
             $table->integer('answer_id')->default(0);
             $table->integer('question_id');
-            $table->integer('up_vote')->default(0);
-            $table->integer('down_vote')->default(0);
             $table->integer('edited_by')->nullable();
             $table->string('created_by');
             $table->integer('status')->comment('0 => deleted, 1 => active');            

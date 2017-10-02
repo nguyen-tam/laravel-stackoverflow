@@ -20,6 +20,7 @@ Morbi eu mollis ligula. Duis iaculis lobortis vestibulum. Vestibulum viverra max
 
             'slug' => 'why-this-program-doesnt-run',
             'status' => 1,
+            'tag' => 'javascript,js,frontend',
             'created_by' => 1,
             'created_at' => date("Y-m-d H:i:s"),
             'updated_at' => date("Y-m-d H:i:s")

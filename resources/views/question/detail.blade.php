@@ -4,6 +4,7 @@
     <link href="{{ asset('plugins/tagsinput/bootstrap-tagsinput.css') }}" rel="stylesheet">
 @section('script')
     <script src="{{ asset('plugins/tagsinput/bootstrap-tagsinput.js') }}"></script>
+    <script src="{{ asset('plugins/ckeditor/ckeditor.js') }}"></script>
     <script>      
       const app = new Vue({
           el: '#app'
@@ -13,31 +14,43 @@
 @endsection
 @section('content')
 <div class="question-detail">
-  <div class="row">
+  <div class="row question-title">
       <div class="col-lg-8">
-          <h1 class="page-header">{{ $question->title }}</h1>
+          <h1 class="page-header text-black">{{ $question->title }}</h1>
       </div>
 
       <div class="col-lg-4 text-right">
-          <a class="btn btn-primary">Ask Question</a>
+          <a class="page-header btn btn-primary">Ask Question</a>
       </div>
   </div>
-  <!-- /.row -->
 
+  <!-- /.row -->
+  <br/>
   <!-- Content Row -->
   <div class="row">
       <div class="col-lg-8 left-side" id="app">        
           <question-detail question_id = "{{ $question->id }}"></question-detail>
+
+          <div class="row post-answer">
+            <form method="POST" action="{{ route('questions.answer') }}">
+              {{ csrf_field() }}
+              <input type="hidden" name="question_id" value="{{ $question->id }}">
+              <textarea class="ckeditor" name="answer"></textarea>
+              <br/>
+              <input type="submit" class="btn btn-primary" value="Post Your Answer" />
+            </form>
+          </div>
+
       </div>
       <div class="col-lg-4 right-side">   
           <div class="info">
-            <p>asked: {{ $question->created_at->diffForHumans() }}</p>
-            <p>viewed: {{ number_format($question->views,0) }} times</p>
+            <p><span class="text-grey">asked:</span> {{ $question->created_at->diffForHumans() }}</p>
+            <p><span class="text-grey">viewed:</span> {{ number_format($question->views,0) }} times</p>
           </div>     
           
-      </div>
-      
+      </div>     
   </div>
+
 <div>
           
 @endsection

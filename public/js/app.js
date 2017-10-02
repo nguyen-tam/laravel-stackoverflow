@@ -1719,6 +1719,17 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 //
 //
 //
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 
 /* harmony default export */ __webpack_exports__["default"] = ({
     data: function data() {
@@ -1746,14 +1757,14 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
         fetchQuestionData: function fetchQuestionData() {
             var _this2 = this;
 
-            axios.get('/api/question/' + this.question_id).then(function (res) {
+            axios.get('/question/' + this.question_id).then(function (res) {
                 _this2.question = res.data;
             });
         },
         fetchAnswers: function fetchAnswers() {
             var _this3 = this;
 
-            axios.get('/api/answers/' + this.question_id).then(function (res) {
+            axios.get('/answers/' + this.question_id).then(function (res) {
                 _this3.answers = res.data;
             });
         },
@@ -1762,25 +1773,38 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
             this.question.up_voted = false;
         },
 
-        voteQuestion: function voteQuestion(question_id, type, vote_category) {
+        voteQuestion: function voteQuestion(vote_id, vote_type) {
             var _this4 = this;
 
-            axios.post('/vote_question', {
-                question_id: question_id,
-                type: type,
-                vote_category: vote_category
+            axios.post('/vote_action', {
+                vote_id: vote_id,
+                vote_type: vote_type,
+                vote_category: this.constants.vote_category.QUESTION
             }).then(function (res) {
                 if (res.data.status) {
 
-                    if (type == _this4.constants.vote_type.UP_VOTE) {
-                        _this4.question.up_vote++;
-                        _this4.resetUpVoteDownVote();
-                        _this4.question.up_voted = true;
-                    } else {
-                        _this4.question.down_vote++;
-                        _this4.resetUpVoteDownVote();
-                        _this4.question.down_voted = true;
-                    }
+                    _this4.question.votes = res.data.votes;
+                    _this4.question.up_voted = res.data.up_voted;
+                    _this4.question.down_voted = res.data.down_voted;
+                }
+            }).catch(function (err) {
+                if (err.response.status == 401) {
+                    alert("You must login before using this function");
+                }
+            });
+        },
+        voteAnswer: function voteAnswer(vote_id, vote_type, index) {
+            var _this5 = this;
+
+            axios.post('/vote_action', {
+                vote_id: vote_id,
+                vote_type: vote_type,
+                vote_category: this.constants.vote_category.ANSWER
+            }).then(function (res) {
+                if (res.data.status) {
+                    _this5.answers[index].votes = res.data.votes;
+                    _this5.answers[index].up_voted = res.data.up_voted;
+                    _this5.answers[index].down_voted = res.data.down_voted;
                 }
             }).catch(function (err) {
                 if (err.response.status == 401) {
@@ -31880,9 +31904,10 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
   }, [_c('div', {
     staticClass: "col-lg-2"
   }, [_c('p', {
+    staticClass: "text-grey",
     on: {
       "click": function($event) {
-        _vm.voteQuestion(_vm.question.id, _vm.constants.vote_type.UP_VOTE, _vm.constants.vote_category.QUESTION)
+        _vm.voteQuestion(_vm.question.id, _vm.constants.vote_type.UP_VOTE)
       }
     }
   }, [_c('i', {
@@ -31890,10 +31915,13 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
     class: {
       voted: _vm.question.up_voted
     }
-  })]), _vm._v(" "), _c('h3', [_vm._v(_vm._s(_vm.question.up_vote - _vm.question.down_vote))]), _vm._v(" "), _c('p', {
+  })]), _vm._v(" "), _c('h3', {
+    staticClass: "text-grey"
+  }, [_vm._v(_vm._s(_vm.question.votes))]), _vm._v(" "), _c('p', {
+    staticClass: "text-grey",
     on: {
       "click": function($event) {
-        _vm.voteQuestion(_vm.question.id, _vm.constants.vote_type.DOWN_VOTE, _vm.constants.vote_category.QUESTION)
+        _vm.voteQuestion(_vm.question.id, _vm.constants.vote_type.DOWN_VOTE)
       }
     }
   }, [_c('i', {
@@ -31903,9 +31931,28 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
     }
   })])]), _vm._v(" "), _c('div', {
     staticClass: "col-lg-10"
-  }, [_c('div', [_vm._v(_vm._s(_vm.question.content))]), _vm._v(" "), _c('div', {
-    staticClass: "author-info pull-right"
-  }, [_c('p', [_vm._v("asked " + _vm._s(_vm.question.created_at))]), _vm._v(" "), _c('p', [_vm._v("by " + _vm._s(_vm.question.asked_user))])])])]), _vm._v(" "), _c('div', {
+  }, [_c('div', [_vm._v(_vm._s(_vm.question.content))]), _vm._v(" "), _c('br'), _vm._v(" "), _c('div', {
+    staticClass: "tag-list"
+  }, _vm._l((_vm.question.tags), function(tag) {
+    return _c('a', {
+      staticClass: "item",
+      attrs: {
+        "href": '/tag/' + tag
+      }
+    }, [_vm._v("\n                    " + _vm._s(tag) + "\n                ")])
+  })), _vm._v(" "), _c('div', {
+    staticClass: "question-author-info pull-right"
+  }, [_c('p', [_vm._v("asked " + _vm._s(_vm.question.created_at))]), _vm._v(" "), _c('img', {
+    attrs: {
+      "width": "60px",
+      "height": "60px",
+      "src": _vm.question.asked_user_avatar
+    }
+  }), _vm._v(" "), _c('a', {
+    attrs: {
+      "href": '/user/' + _vm.question.asked_user_id
+    }
+  }, [_vm._v("  " + _vm._s(_vm.question.asked_user))])])])]), _vm._v(" "), _c('div', {
     staticClass: "row answers-count"
   }, [_c('div', {
     staticClass: "col-lg-12"
@@ -31913,16 +31960,48 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
     staticClass: "row"
   }, [_c('div', {
     staticClass: "col-lg-12 answers-info"
-  }, _vm._l((_vm.answers), function(answer) {
+  }, _vm._l((_vm.answers), function(answer, index) {
     return _c('div', {
       staticClass: "row"
     }, [_c('div', {
       staticClass: "col-lg-2"
-    }, [_vm._m(0, true), _vm._v(" "), _c('h3', [_vm._v(_vm._s(answer.up_vote - answer.down_vote))]), _vm._v(" "), _vm._m(1, true)]), _vm._v(" "), _c('div', {
+    }, [_c('p', {
+      on: {
+        "click": function($event) {
+          _vm.voteAnswer(answer.id, _vm.constants.vote_type.UP_VOTE, index)
+        }
+      }
+    }, [_c('i', {
+      staticClass: "fa fa-sort-asc fa-3x",
+      class: {
+        voted: answer.up_voted
+      }
+    })]), _vm._v(" "), _c('h3', [_vm._v(_vm._s(answer.votes))]), _vm._v(" "), _c('p', {
+      on: {
+        "click": function($event) {
+          _vm.voteAnswer(answer.id, _vm.constants.vote_type.DOWN_VOTE, index)
+        }
+      }
+    }, [_c('i', {
+      staticClass: "fa fa-sort-desc fa-3x",
+      class: {
+        voted: answer.down_voted
+      }
+    })])]), _vm._v(" "), _c('div', {
       staticClass: "col-lg-10"
     }, [_c('div', [_vm._v(_vm._s(answer.content))]), _vm._v(" "), _c('div', {
-      staticClass: "author-info pull-right"
-    }, [_c('p', [_vm._v("answered " + _vm._s(answer.created_at))]), _vm._v(" "), _c('p', [_vm._v("by " + _vm._s(answer.user.name))])])]), _vm._v(" "), _vm._l((answer.children), function(comment) {
+      staticClass: "answer-author-info pull-right"
+    }, [_c('p', [_vm._v("answered " + _vm._s(answer.created_at))]), _vm._v(" "), _c('img', {
+      attrs: {
+        "width": "60px",
+        "height": "60px",
+        "src": answer.user.avatar
+      }
+    }), _vm._v(" "), _c('a', {
+      attrs: {
+        "href": '/user/' + answer.user.id
+      }
+    }, [_vm._v("  " + _vm._s(answer.user.name))])])]), _vm._v(" "), _vm._l((answer.children), function(comment) {
       return _c('div', {
         staticClass: "row comments"
       }, [_c('div', {
@@ -31932,17 +32011,9 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
       }, [_vm._v(_vm._s(comment.user.name))]), _vm._v(" "), _c('span', {
         staticClass: "commented-at"
       }, [_vm._v(_vm._s(comment.created_at))])])])])
-    }), _vm._v(" "), _vm._m(2, true), _vm._v(" "), _c('br')], 2)
+    }), _vm._v(" "), _vm._m(0, true), _vm._v(" "), _c('br')], 2)
   }))])])
 },staticRenderFns: [function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;
-  return _c('p', [_c('i', {
-    staticClass: "fa fa-sort-asc fa-3x"
-  })])
-},function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;
-  return _c('p', [_c('i', {
-    staticClass: "fa fa-sort-desc fa-3x"
-  })])
-},function (){var _vm=this;var _h=_vm.$createElement;var _c=_vm._self._c||_h;
   return _c('div', {
     staticClass: "row"
   }, [_c('div', {

@@ -180,6 +180,8 @@ return [
         Zizaco\Entrust\EntrustServiceProvider::class,
 
         Collective\Html\HtmlServiceProvider::class,
+        Intervention\Image\ImageServiceProvider::class,
+
 
     ],
 
@@ -235,7 +237,8 @@ return [
         'Html' => Collective\Html\HtmlFacade::class,
 
         'Carbon' => 'Carbon\Carbon',
-
+        'Image' => Intervention\Image\Facades\Image::class,
+        
     ],
 
 ];

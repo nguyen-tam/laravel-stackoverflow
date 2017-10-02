@@ -99,3 +99,36 @@ footer {
   border: 1px solid #e4e6e8;
   background: #FFF;
 }
+
+.page-header {
+  padding-bottom: 10px;
+  margin: 44px 0 22px;
+}
+
+.text-black {
+  color: #242729;
+}
+
+.text-grey {
+  color: #9199a1;
+}
+
+.question-title {
+  border-bottom: 1px solid #e4e6e8;
+}
+
+.question-author-info {
+    background-color: #E0EAF1;
+    padding: 10px;
+}
+
+.question-author-info img, .answer-author-info img {
+    float: left;
+}
+
+.tag-list .item {
+    background-color: #E1ECF4;
+    color : #39739d;
+    margin : 5px 5px 5px 0;
+    padding: 5px;
+}

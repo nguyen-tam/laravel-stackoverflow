@@ -2,19 +2,26 @@
     <div>        
         <div class="row question-info">
             <div class="col-lg-2">
-                <p v-on:click="voteQuestion(question.id, constants.vote_type.UP_VOTE ,constants.vote_category.QUESTION)">
+                <p class="text-grey" v-on:click="voteQuestion(question.id, constants.vote_type.UP_VOTE)">
                     <i v-bind:class="{voted:question.up_voted}" class="fa fa-sort-asc fa-3x"></i>
                 </p>
-                <h3>{{ question.up_vote - question.down_vote }}</h3>
-                <p v-on:click="voteQuestion(question.id, constants.vote_type.DOWN_VOTE, constants.vote_category.QUESTION)">
+                <h3 class="text-grey">{{ question.votes }}</h3>
+                <p class="text-grey" v-on:click="voteQuestion(question.id, constants.vote_type.DOWN_VOTE)">
                     <i v-bind:class="{voted:question.down_voted}" class="fa fa-sort-desc fa-3x"></i>
                 </p>            
             </div>
             <div class="col-lg-10">            
                 <div>{{ question.content }}</div>
-                <div class="author-info pull-right">
+                <br/>
+                <div class="tag-list">
+                    <a :href="'/tag/' + tag" class="item" v-for="tag in question.tags">
+                        {{tag}}
+                    </a>
+                </div>
+                <div class="question-author-info pull-right">
                     <p>asked {{ question.created_at }}</p>
-                    <p>by {{ question.asked_user }}</p>
+                    <img width="60px" height="60px" v-bind:src="question.asked_user_avatar"/>
+                    <a :href="'/user/' + question.asked_user_id">&nbsp; {{ question.asked_user }}</a>
                 </div>
             </div>            
         </div>
@@ -29,18 +36,23 @@
         <div class="row">
             <div class="col-lg-12 answers-info">
 
-                <div class="row" v-for="answer in answers">
+                <div class="row" v-for="(answer, index) in answers">
 
                     <div class="col-lg-2">
-                        <p><i class="fa fa-sort-asc fa-3x"></i></p>
-                        <h3>{{ answer.up_vote - answer.down_vote }}</h3>
-                        <p><i class="fa fa-sort-desc fa-3x"></i></p>            
+                        <p v-on:click="voteAnswer(answer.id, constants.vote_type.UP_VOTE, index)">
+                            <i v-bind:class="{voted:answer.up_voted}" class="fa fa-sort-asc fa-3x"></i>
+                        </p>
+                        <h3>{{ answer.votes }}</h3>
+                        <p v-on:click="voteAnswer(answer.id, constants.vote_type.DOWN_VOTE, index)">
+                            <i v-bind:class="{voted:answer.down_voted}" class="fa fa-sort-desc fa-3x"></i>
+                        </p>            
                     </div>
                     <div class="col-lg-10">            
                         <div>{{ answer.content }}</div>
-                        <div class="author-info pull-right">
+                        <div class="answer-author-info pull-right">
                             <p>answered {{ answer.created_at }}</p>
-                            <p>by {{ answer.user.name }}</p>
+                            <img width="60px" height="60px" v-bind:src="answer.user.avatar"/>
+                            <a :href="'/user/' + answer.user.id">&nbsp; {{ answer.user.name }}</a>
                         </div>                        
                     </div>
                     <!-- /.col-lg-10 (answers) -->
@@ -66,7 +78,6 @@
             </div>
             <!-- /.answers-info -->
         </div>
-
     </div>
 </template>
 
@@ -99,12 +110,12 @@
                 });
             },
             fetchQuestionData() {
-                axios.get('/api/question/' + this.question_id).then((res) => {
+                axios.get('/question/' + this.question_id).then((res) => {
                     this.question = res.data;
                 });
             },
             fetchAnswers() {
-                axios.get('/api/answers/' + this.question_id)
+                axios.get('/answers/' + this.question_id)
                 .then((res) => {
                     this.answers = res.data;
                 });
@@ -113,26 +124,39 @@
                 this.question.down_voted = false;
                 this.question.up_voted = false;
             },
-            voteQuestion: function (question_id, type, vote_category) {
+            voteQuestion: function (vote_id, vote_type) {
 
-                axios.post('/vote_question', {
-                    question_id : question_id,
-                    type: type,
-                    vote_category: vote_category
+                axios.post('/vote_action', {
+                    vote_id : vote_id,
+                    vote_type: vote_type,
+                    vote_category: this.constants.vote_category.QUESTION
                 })
                 .then((res) => {
                     if (res.data.status) {
 
-                        if (type == this.constants.vote_type.UP_VOTE) {
-                            this.question.up_vote++;
-                            this.resetUpVoteDownVote();
-                            this.question.up_voted = true;    
-                        } else {
-                            this.question.down_vote++;
-                            this.resetUpVoteDownVote();
-                            this.question.down_voted = true;
-                        }
-                        
+                        this.question.votes = res.data.votes;
+                        this.question.up_voted = res.data.up_voted;
+                        this.question.down_voted = res.data.down_voted;                                                
+                    }
+                })
+                .catch((err) => {
+                    if (err.response.status == 401) {
+                        alert("You must login before using this function");
+                    }
+                });
+            },
+            voteAnswer: function (vote_id, vote_type, index) {
+
+                axios.post('/vote_action', {
+                    vote_id : vote_id,
+                    vote_type: vote_type,
+                    vote_category: this.constants.vote_category.ANSWER
+                })
+                .then((res) => {
+                    if (res.data.status) {
+                        this.answers[index].votes = res.data.votes;
+                        this.answers[index].up_voted = res.data.up_voted;
+                        this.answers[index].down_voted = res.data.down_voted;                                                
                     }
                 })
                 .catch((err) => {

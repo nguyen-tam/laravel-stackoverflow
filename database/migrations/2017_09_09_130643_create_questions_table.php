@@ -18,9 +18,7 @@ class CreateQuestionsTable extends Migration
             $table->string('title');
             $table->text('content');
             $table->text('slug');
-            $table->integer('up_vote')->default(0);
             $table->integer('views')->default(0);
-            $table->integer('down_vote')->default(0);
             $table->integer('status')->comment('0 => deleted, 1 => active, 2 => duplicated');
             $table->string('tag')->nullable();
             $table->integer('created_by');

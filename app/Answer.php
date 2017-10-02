@@ -8,7 +8,7 @@ class Answer extends Model
 {
     protected $table = 'answers';
 
-    public $timestamps = false;
+    public $timestamps = true;
 
     public function parent()
     {

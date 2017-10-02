@@ -8,6 +8,8 @@ class Question extends Model
 {
     protected $table = 'questions';
 
+    public $timestamps = true;
+
     public function user()
     {
         return $this->hasOne('App\User', 'id', 'created_by');

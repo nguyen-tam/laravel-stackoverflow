@@ -6,10 +6,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Input;
 use App\Question;
 use App\Answer;
+use App\UserVotes;
+use Carbon;
 
 use Config;
 use Auth;
 use Response;
+
 class QuestionController extends Controller
 {
     /**
@@ -17,10 +20,6 @@ class QuestionController extends Controller
      *
      * @return void
      */
-    // public function __construct()
-    // {
-    //     $this->middleware('auth');
-    // }
 
     public function showAsk()
     {
@@ -48,18 +47,40 @@ class QuestionController extends Controller
 
     	$question_url = Config::get('constants.QUESTION_URL') . '/' . $question->id . '/' . $question->slug ;
     	
-    	// redirect to question url
     	return redirect($question_url);
+    }
+
+    public function answer()
+    {
+      
+      $question = Question::find(Input::get("question_id"));
+
+      $answer = new Answer;
+      $answer->content = Input::get("answer");
+      $answer->question_id = $question->id;
+      $answer->answer_id = 0;
+      $answer->status = 1;
+      $answer->created_by = Auth::user()->id;
+      $answer->save();
+
+      $question_url = Config::get('constants.QUESTION_URL') . '/' . $question->id . '/' . $question->slug ;
+      
+      return redirect($question_url);
     }
 
     public function getQuestionById($id)
     {
         $question = Question::find($id);
         $question->asked_user = ($question->user)['name'];
+        $question->asked_user_id = ($question->user)['id'];
+        $question->tags = explode(',', $question->tag) ;
+        $question->asked_user_avatar = '/uploads/avatars/'. ($question->user)['avatar'];
 
-        // TODO check user upvoted, down voted or not
-        $question->up_voted = false;
-        $question->down_voted = false;
+        $question->up_voted = $this->findUserVoteByType($id, Config::get('constants.VOTE_CATEGORY.QUESTION'), Config::get('constants.VOTE_TYPE.UP_VOTE'));
+        $question->down_voted = $this->findUserVoteByType($id, Config::get('constants.VOTE_CATEGORY.QUESTION'), Config::get('constants.VOTE_TYPE.DOWN_VOTE'));
+
+        $question->votes = $this->countUpVoteByUserAndVoteId($id, ($question->user)['id'], Config::get('constants.VOTE_CATEGORY.QUESTION') )
+                           - $this->countDownVoteByUserAndVoteId($id, ($question->user)['id'], Config::get('constants.VOTE_CATEGORY.QUESTION') );
         return Response::json($question);
     }    
 
@@ -78,6 +99,19 @@ class QuestionController extends Controller
                 ->orderBy('answers.status', 'desc')
                 ->orderBy('answers.created_at', 'desc')
                 ->get();
+
+      foreach ($answers as $key => $answer) {
+
+        $answers[$key]->up_voted = $this->findUserVoteByType($answer->id, Config::get('constants.VOTE_CATEGORY.ANSWER'), Config::get('constants.VOTE_TYPE.UP_VOTE'));
+        $answers[$key]->down_voted = $this->findUserVoteByType($answer->id, Config::get('constants.VOTE_CATEGORY.ANSWER'), Config::get('constants.VOTE_TYPE.DOWN_VOTE'));
+
+        var_dump(($answer->user)["avatar"]);
+        ($answers[$key]->user)["avatar"] = '/uploads/avatars/' . ($answer->user)["avatar"] ;
+
+        $answers[$key]->votes = $this->countUpVoteByUserAndVoteId($answer->id, ($answer->user)['id'], Config::get('constants.VOTE_CATEGORY.ANSWER') )
+                                - $this->countDownVoteByUserAndVoteId($answer->id, ($answer->user)['id'], Config::get('constants.VOTE_CATEGORY.ANSWER') );  
+      }
+      
 
       return Response::json($answers);
     }
@@ -100,5 +134,93 @@ class QuestionController extends Controller
         return view('question.detail', ['question' => $question,
                                         'currentUserId' => $currentUserId,
                                         'isLogin' => $currentUserId > 0]);
+    }
+
+    protected function findUserVote($vote_id, $vote_category ) {
+      $user_vote = UserVotes::where('vote_id', $vote_id)
+              ->where('vote_by', Auth::user()->id)
+              ->where('vote_category', $vote_category) // 0 question, 1 answer
+              // ->where('vote_type', $vote_type)    // 0 vote, 1 downvote
+              ->first();
+      return $user_vote;
+    }
+
+    protected function findUserVoteByType($vote_id, $vote_category, $vote_type) {            
+
+      $user_vote = UserVotes::where('vote_id', $vote_id)
+              ->where('vote_by', Auth::user()->id)
+              ->where('vote_category', $vote_category)
+              ->where('vote_type', $vote_type)
+              ->exists();
+      return $user_vote;
+    }
+
+    protected function countUpVoteByUserAndVoteId($vote_id, $user_id, $vote_category ) {
+      $up_vote = UserVotes::where('vote_id', $vote_id)
+              // ->where('vote_by', $user_id)
+              ->where('vote_type', Config::get('constants.VOTE_TYPE.UP_VOTE')) 
+              ->where('vote_category', $vote_category)              
+              ->count();
+      return $up_vote;
+    }
+
+    protected function countDownVoteByUserAndVoteId($vote_id, $user_id, $vote_category ) {
+      $up_vote = UserVotes::where('vote_id', $vote_id)
+              // ->where('vote_by', $user_id)
+              ->where('vote_type', Config::get('constants.VOTE_TYPE.DOWN_VOTE'))   
+              ->where('vote_category', $vote_category)           
+              ->count();
+      return $up_vote;
+    }
+
+    protected function undoVoted($user_voted) {
+      $user_voted->delete();
+    }
+
+    protected function insertUserVote($vote_id, $vote_category, $vote_type) {
+      
+      $new_vote = new UserVotes;
+      $new_vote->created_at = Carbon::now();
+      $new_vote->vote_by = Auth::user()->id;
+      $new_vote->vote_id = $vote_id;
+      $new_vote->vote_category = $vote_category;
+      $new_vote->vote_type = $vote_type;
+      $new_vote->save();
+      
+    }
+
+    public function voteAction() {
+
+      $vote_id = Input::get('vote_id');
+      $vote_type = Input::get('vote_type');
+      $vote_category = Input::get('vote_category');      
+
+
+      $user_voted = $this->findUserVote($vote_id, $vote_category);
+
+      if($user_voted){
+
+        $isUndoVoted = $user_voted->vote_type == $vote_type;
+
+        if ($isUndoVoted) {
+          $this->undoVoted($user_voted);
+        } else {
+          $this->undoVoted($user_voted);
+          $this->insertUserVote($vote_id, $vote_category, $vote_type);
+        }
+
+      } else {
+        $this->insertUserVote($vote_id, $vote_category, $vote_type);
+      }
+
+      $up_votes = $this->countUpVoteByUserAndVoteId($vote_id,Auth::user()->id, $vote_category);
+      $down_votes = $this->countDownVoteByUserAndVoteId($vote_id,Auth::user()->id, $vote_category);
+
+      $votes = $up_votes - $down_votes;
+      $up_voted = $this->findUserVoteByType($vote_id, $vote_category, Config::get('constants.VOTE_TYPE.UP_VOTE'));
+      $down_voted = $this->findUserVoteByType($vote_id, $vote_category, Config::get('constants.VOTE_TYPE.DOWN_VOTE'));
+
+      return Response::json(['status' => true, 'votes' => $votes, 'up_voted' => $up_voted, 'down_voted' => $down_voted
+                           ]);
     }
 }
