@@ -113,6 +113,11 @@ footer {
   color: #9199a1;
 }
 
+.add-a-comment {
+    color: #848d95;
+    opacity : 0.6;
+}
+
 .question-title {
   border-bottom: 1px solid #e4e6e8;
 }

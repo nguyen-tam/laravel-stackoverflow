@@ -31,6 +31,7 @@
       <div class="col-lg-8 left-side" id="app">        
           <question-detail question_id = "{{ $question->id }}"></question-detail>
 
+          @if (Auth::check())
           <div class="row post-answer">
             <form method="POST" action="{{ route('questions.answer') }}">
               {{ csrf_field() }}
@@ -40,6 +41,7 @@
               <input type="submit" class="btn btn-primary" value="Post Your Answer" />
             </form>
           </div>
+          @endif
 
       </div>
       <div class="col-lg-4 right-side">   

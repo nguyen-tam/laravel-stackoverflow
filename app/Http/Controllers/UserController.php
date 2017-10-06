@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Input;
 
 use Auth;
 use Image;
+use Response;
 
 class UserController extends Controller
 {
@@ -32,6 +33,10 @@ class UserController extends Controller
     	return redirect('/users/' . Auth::user()->id );
 
   	}
+
+    public function isAuthenticated() {
+      return Response::json(Auth::check());
+    }
 
   	public function updateProfile() {
 

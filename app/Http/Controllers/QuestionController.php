@@ -68,6 +68,23 @@ class QuestionController extends Controller
       return redirect($question_url);
     }
 
+    public function comment()
+    {
+      
+      $answer_id = Input::get("answer_id");
+
+      $answer = new Answer;
+      $answer->content = Input::get("content");
+      $answer->question_id = 0;
+      $answer->answer_id = $answer_id;
+      $answer->status = 1;
+      $answer->created_by = Auth::user()->id;
+      $answer->save();
+      
+      return Response::json(['status' => true, 'answer' => $answer]);
+
+    }
+
     public function getQuestionById($id)
     {
         $question = Question::find($id);
@@ -76,8 +93,14 @@ class QuestionController extends Controller
         $question->tags = explode(',', $question->tag) ;
         $question->asked_user_avatar = '/uploads/avatars/'. ($question->user)['avatar'];
 
-        $question->up_voted = $this->findUserVoteByType($id, Config::get('constants.VOTE_CATEGORY.QUESTION'), Config::get('constants.VOTE_TYPE.UP_VOTE'));
-        $question->down_voted = $this->findUserVoteByType($id, Config::get('constants.VOTE_CATEGORY.QUESTION'), Config::get('constants.VOTE_TYPE.DOWN_VOTE'));
+        if (Auth::user()) {
+          $question->up_voted = $this->findUserVoteByType($id, Config::get('constants.VOTE_CATEGORY.QUESTION'), Config::get('constants.VOTE_TYPE.UP_VOTE'));
+          $question->down_voted = $this->findUserVoteByType($id, Config::get('constants.VOTE_CATEGORY.QUESTION'), Config::get('constants.VOTE_TYPE.DOWN_VOTE'));  
+        } else {
+          $question->up_voted = false;
+          $question->down_voted = false;
+        }
+        
 
         $question->votes = $this->countUpVoteByUserAndVoteId($id, ($question->user)['id'], Config::get('constants.VOTE_CATEGORY.QUESTION') )
                            - $this->countDownVoteByUserAndVoteId($id, ($question->user)['id'], Config::get('constants.VOTE_CATEGORY.QUESTION') );
@@ -102,12 +125,13 @@ class QuestionController extends Controller
 
       foreach ($answers as $key => $answer) {
 
-        $answers[$key]->up_voted = $this->findUserVoteByType($answer->id, Config::get('constants.VOTE_CATEGORY.ANSWER'), Config::get('constants.VOTE_TYPE.UP_VOTE'));
-        $answers[$key]->down_voted = $this->findUserVoteByType($answer->id, Config::get('constants.VOTE_CATEGORY.ANSWER'), Config::get('constants.VOTE_TYPE.DOWN_VOTE'));
-
-        var_dump(($answer->user)["avatar"]);
-        ($answers[$key]->user)["avatar"] = '/uploads/avatars/' . ($answer->user)["avatar"] ;
-
+        if (Auth::user()) {
+          $answers[$key]->up_voted = $this->findUserVoteByType($answer->id, Config::get('constants.VOTE_CATEGORY.ANSWER'), Config::get('constants.VOTE_TYPE.UP_VOTE'));
+          $answers[$key]->down_voted = $this->findUserVoteByType($answer->id, Config::get('constants.VOTE_CATEGORY.ANSWER'), Config::get('constants.VOTE_TYPE.DOWN_VOTE'));
+        } else {
+          $answers[$key]->up_voted = false;
+          $answers[$key]->down_voted = false;
+        }
         $answers[$key]->votes = $this->countUpVoteByUserAndVoteId($answer->id, ($answer->user)['id'], Config::get('constants.VOTE_CATEGORY.ANSWER') )
                                 - $this->countDownVoteByUserAndVoteId($answer->id, ($answer->user)['id'], Config::get('constants.VOTE_CATEGORY.ANSWER') );  
       }
@@ -175,7 +199,7 @@ class QuestionController extends Controller
 
     protected function undoVoted($user_voted) {
       $user_voted->delete();
-    }
+    }    
 
     protected function insertUserVote($vote_id, $vote_category, $vote_type) {
       
