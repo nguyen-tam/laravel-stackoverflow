@@ -19,7 +19,7 @@
                     </a>
                 </div>
                 <div class="question-author-info pull-right">
-                    <p>asked {{ question.created_at }}</p>
+                    <p>asked {{ question.formatted_created_at }}</p>
                     <img width="60px" height="60px" v-bind:src="question.asked_user_avatar"/>
                     <a :href="'/user/' + question.asked_user_id">&nbsp; {{ question.asked_user }}</a>
                 </div>
@@ -57,7 +57,7 @@
 
                     <div class="row">
                         <div class="col-lg-4 col-lg-offset-8 col-md-4 col-md-offset-8 col-sm-6 col-sm-offset-6 answer-author-info">
-                            <p>answered {{ answer.created_at }}</p>
+                            <p>answered {{ answer.formatted_created_at }}</p>
                             <img width="60px" height="60px" v-bind:src="'/uploads/avatars/' + answer.user.avatar"/>
                             <a :href="'/user/' + answer.user.id">&nbsp; {{ answer.user.name }}</a>
                         </div>
@@ -132,7 +132,6 @@
             fetchQuestionData() {
                 axios.get('/question/' + this.question_id).then((res) => {
                     this.question = res.data;
-                    this.question.created_at = moment(this.question.created_at).format('DD-MM-YY hh:mm');
                 });
             },
             fetchAnswers() {
@@ -141,7 +140,6 @@
                     
                     res.data.map(function(value, key) {
                         value.showAddComment = false;
-                        value.created_at = moment(value.created_at).format('DD-MM-YY hh:mm');
                     });
 
                     this.answers = res.data;

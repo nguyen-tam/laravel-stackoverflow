@@ -100,8 +100,9 @@ class QuestionController extends Controller
           $question->up_voted = false;
           $question->down_voted = false;
         }
-        
 
+        $question->formatted_created_at = $question->created_at->format('M-d-Y') . ' at ' . $question->created_at->format('h:i');
+        
         $question->votes = $this->countUpVoteByUserAndVoteId($id, ($question->user)['id'], Config::get('constants.VOTE_CATEGORY.QUESTION') )
                            - $this->countDownVoteByUserAndVoteId($id, ($question->user)['id'], Config::get('constants.VOTE_CATEGORY.QUESTION') );
         return Response::json($question);
@@ -132,12 +133,27 @@ class QuestionController extends Controller
           $answers[$key]->up_voted = false;
           $answers[$key]->down_voted = false;
         }
+
+        $answers[$key]->formatted_created_at = $answers[$key]->created_at->format('M-d-Y') . ' at ' . $answers[$key]->created_at->format('h:i');
+
         $answers[$key]->votes = $this->countUpVoteByUserAndVoteId($answer->id, ($answer->user)['id'], Config::get('constants.VOTE_CATEGORY.ANSWER') )
                                 - $this->countDownVoteByUserAndVoteId($answer->id, ($answer->user)['id'], Config::get('constants.VOTE_CATEGORY.ANSWER') );  
       }
       
 
       return Response::json($answers);
+    }
+
+    public function showQuestionList() {
+
+      $questions = Question::orderBy('created_at', 'desc')->paginate(10);
+
+      $newest_questions = Question::orderBy('created_at', 'desc')->paginate(20);
+
+      $question_count = Question::count();
+
+      return view('question.list', ['questions' => $questions, 'newest_questions' => $newest_questions
+                                    ,'question_count' => $question_count ]);
     }
 
     public function showQuestionDetail($id,$slug) {

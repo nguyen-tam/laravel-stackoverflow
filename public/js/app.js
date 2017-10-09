@@ -1781,7 +1781,6 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
             axios.get('/question/' + this.question_id).then(function (res) {
                 _this3.question = res.data;
-                _this3.question.created_at = moment(_this3.question.created_at).format('DD-MM-YY hh:mm');
             });
         },
         fetchAnswers: function fetchAnswers() {
@@ -1791,7 +1790,6 @@ Object.defineProperty(__webpack_exports__, "__esModule", { value: true });
 
                 res.data.map(function (value, key) {
                     value.showAddComment = false;
-                    value.created_at = moment(value.created_at).format('DD-MM-YY hh:mm');
                 });
 
                 _this4.answers = res.data;
@@ -32051,7 +32049,7 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
     }, [_vm._v("\n                    " + _vm._s(tag) + "\n                ")])
   })), _vm._v(" "), _c('div', {
     staticClass: "question-author-info pull-right"
-  }, [_c('p', [_vm._v("asked " + _vm._s(_vm.question.created_at))]), _vm._v(" "), _c('img', {
+  }, [_c('p', [_vm._v("asked " + _vm._s(_vm.question.formatted_created_at))]), _vm._v(" "), _c('img', {
     attrs: {
       "width": "60px",
       "height": "60px",
@@ -32110,7 +32108,7 @@ module.exports={render:function (){var _vm=this;var _h=_vm.$createElement;var _c
       staticClass: "row"
     }, [_c('div', {
       staticClass: "col-lg-4 col-lg-offset-8 col-md-4 col-md-offset-8 col-sm-6 col-sm-offset-6 answer-author-info"
-    }, [_c('p', [_vm._v("answered " + _vm._s(answer.created_at))]), _vm._v(" "), _c('img', {
+    }, [_c('p', [_vm._v("answered " + _vm._s(answer.formatted_created_at))]), _vm._v(" "), _c('img', {
       attrs: {
         "width": "60px",
         "height": "60px",

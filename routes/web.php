@@ -18,6 +18,7 @@ Route::post('/questions/ask', 'QuestionController@ask')->name('questions.ask');
 Route::post('/questions/answer', 'QuestionController@answer')->name('questions.answer');
 Route::post('/questions/comment', 'QuestionController@comment')->name('questions.comment');
 Route::get('/questions/{id}/{slug}', 'QuestionController@showQuestionDetail');
+Route::get('/questions/list', 'QuestionController@showQuestionList');
 
 Auth::routes();
 
