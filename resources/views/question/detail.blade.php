@@ -20,7 +20,7 @@
       </div>
 
       <div class="col-lg-4 text-right">
-          <a class="page-header btn btn-primary">Ask Question</a>
+          <a href="/questions/ask" class="page-header btn btn-primary">Ask Question</a>
       </div>
   </div>
 
@@ -49,6 +49,17 @@
             <p><span class="text-grey">asked:</span> {{ $question->created_at->diffForHumans() }}</p>
             <p><span class="text-grey">viewed:</span> {{ number_format($question->views,0) }} times</p>
           </div>     
+
+          <div class="row newest-question">          
+            <h3>Newest questions</h3>
+            
+            @foreach ($newest_questions as $question)
+            <div class="item">
+              <a href="#" class="title">{{ $question->title }}</a>
+            </div>
+            @endforeach
+            
+        </div>
           
       </div>     
   </div>

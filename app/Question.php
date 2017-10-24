@@ -14,4 +14,9 @@ class Question extends Model
     {
         return $this->hasOne('App\User', 'id', 'created_by');
     }
+
+     public function tag()
+    {
+        return $this->hasMany('App\Tag');
+    }
 }

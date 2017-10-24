@@ -14,14 +14,19 @@
                 <div>{{ question.content }}</div>
                 <br/>
                 <div class="tag-list">
-                    <a :href="'/tag/' + tag" class="item" v-for="tag in question.tags">
-                        {{tag}}
+                    <a :href="'/tag/' + tag.name" class="item" v-for="tag in question.tags">
+                        {{tag.name}}
                     </a>
+                </div>
+                <br/>
+                <div>
+                    <a :href="'/question/' + question.id + '/edit'" class="text-brown" v-show="userId == question.asked_user_id">edit</a>
+                    <!-- <a href="" class="text-brown" v-show="userId == question.asked_user_id">delete</a> -->
                 </div>
                 <div class="question-author-info pull-right">
                     <p>asked {{ question.formatted_created_at }}</p>
                     <img width="60px" height="60px" v-bind:src="question.asked_user_avatar"/>
-                    <a :href="'/user/' + question.asked_user_id">&nbsp; {{ question.asked_user }}</a>
+                    <a :href="'/user/' + question.asked_user_id + '/view'">&nbsp; {{ question.asked_user }}</a>
                 </div>
             </div>            
         </div>
@@ -46,7 +51,16 @@
                             <h3 class="text-grey">{{ answer.votes }}</h3>
                             <p class="text-grey" v-on:click="voteAnswer(answer.id, constants.vote_type.DOWN_VOTE, index)">
                                 <i v-bind:class="{voted:answer.down_voted}" class="fa fa-sort-desc fa-3x"></i>
-                            </p>            
+                            </p>
+
+                            <p class="text-grey" v-show="userId == question.asked_user_id" v-on:click="acceptAnswer(answer.id, index)">
+                                <i v-bind:class="{accepted:answer.accepted}" class="fa fa-check fa-2x"></i>
+                            </p>
+
+                            <p class="text-grey" v-show="answer.accepted && !isAuthenticated">
+                                <i class="fa fa-check fa-2x accepted"></i>
+                            </p>
+
                         </div>
                         <div class="col-lg-10 col-md-10 col-sm-6">            
                             <div v-html="answer.content"></div>
@@ -56,18 +70,23 @@
                     <!-- /.col-lg-10 (answers) -->
 
                     <div class="row">
-                        <div class="col-lg-4 col-lg-offset-8 col-md-4 col-md-offset-8 col-sm-6 col-sm-offset-6 answer-author-info">
+                        <div class="col-lg-4 col-lg-offset-2 col-md-4 col-md-offset-2 col-sm-6">
+                            <a :href="'/answer/' + answer.id + '/edit'" class="text-brown" v-show="userId == answer.user.id">edit</a>
+                            <!-- <a href="" class="text-brown" v-show="userId == answer.user.id">delete</a>                             -->
+                        </div>
+                        <div class="col-lg-4 col-lg-offset-2 col-md-4 col-md-offset-2 col-sm-6 answer-author-info">
                             <p>answered {{ answer.formatted_created_at }}</p>
                             <img width="60px" height="60px" v-bind:src="'/uploads/avatars/' + answer.user.avatar"/>
-                            <a :href="'/user/' + answer.user.id">&nbsp; {{ answer.user.name }}</a>
+                            <a :href="'/user/' + answer.user.id  + '/view'">&nbsp; {{ answer.user.name }}</a>
                         </div>
                     </div>   
 
                     <div class="row comments" v-for="comment in answer.children">
                         <div class="col-lg-offset-2 col-lg-10">
                             <p>{{ comment.content }} 
-                                - <a :href="'/user/' + comment.user.id" class="commented-by" >&nbsp; {{ comment.user.name }}</a>
-                                <span class="commented-at">{{ comment.created_at }}</span></p>
+                                - <a :href="'/user/' + comment.user.id  + '/view'" class="commented-by" >&nbsp; {{ comment.user.name }}</a>
+                                <span class="commented-at">{{ comment.created_at }}</span>
+                            </p>
                         </div>
                     </div>
                     <!-- /.comments -->
@@ -94,11 +113,6 @@
     </div>
 </template>
 
-<style type="text/css">
-    .voted {
-        color: #f48024;
-    }
-</style>
 <script>
     export default {
 
@@ -108,14 +122,15 @@
                 answers: [],
                 isActive: 'red',
                 constants: [],
-                isAuthenticated:false
+                isAuthenticated:false,
+                userId:0
             };
         },
         created() {
             this.fetchQuestionData();
             this.fetchAnswers();
             this.fetchConstants();
-            this.checkAuthenticated();
+            this.checkAuthenticated();            
         },
         methods: {
 
@@ -127,6 +142,15 @@
             checkAuthenticated() {
                 axios.get('/user/isAuthenticated/').then((res) => {
                     this.isAuthenticated = res.data;
+                    if (this.isAuthenticated) {
+                        this.getCurrentUserId();
+                    }
+                    
+                });
+            },
+            getCurrentUserId() {
+                axios.get('/user/getCurrentUserId/').then((res) => {
+                    this.userId = res.data;
                 });
             },
             fetchQuestionData() {
@@ -168,6 +192,11 @@
             },
             voteQuestion: function (vote_id, vote_type) {
 
+                if (this.userId == this.question.asked_user_id) {
+                    alert("Can't vote your own post");
+                    return;
+                }
+
                 axios.post('/vote_action', {
                     vote_id : vote_id,
                     vote_type: vote_type,
@@ -187,8 +216,32 @@
                     }
                 });
             },
+            acceptAnswer : function(answer_id, index) {
+                axios.post('/accept_answer', {
+                    answer_id : answer_id,
+                    question_id : this.question.id
+                })
+                .then((res) => {
+                    if (res.data.status) {
+
+                        this.answers.map(function(value, key) {
+                            value.accepted = false;
+                        });
+                        this.answers[index].accepted = true;                                                   
+                    }
+                })
+                .catch((err) => {
+                    if (err.response.status == 401) {
+                        alert("You must login before using this function");
+                    }
+                });
+            },
             voteAnswer: function (vote_id, vote_type, index) {
 
+                if (this.userId == this.answers[index].user.id) {
+                    alert("Can't vote your own post");
+                    return;
+                }
                 axios.post('/vote_action', {
                     vote_id : vote_id,
                     vote_type: vote_type,

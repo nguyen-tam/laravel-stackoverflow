@@ -6,12 +6,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Input;
 use App\Question;
 use App\Answer;
+use App\Tag;
 use App\UserVotes;
 use Carbon;
 
 use Config;
 use Auth;
 use Response;
+use DB;
 
 class QuestionController extends Controller
 {
@@ -38,12 +40,15 @@ class QuestionController extends Controller
 
     	$question->status = Config::get('constants.QUESTION_STATUS.ACTIVE');
 
-    	if (!is_null(Input::get('tag'))) {
-    		$question->tag = strtolower(Input::get('tag'));
-    	}
-
     	$question->created_by = Auth::user()->id;
     	$question->save();
+
+      foreach (explode(',', strtolower(Input::get('tag'))) as $key => $value) {
+        $tag = new Tag;
+        $tag->name = $value;
+        $tag->question_id = $question->id;
+        $tag->save();
+      }
 
     	$question_url = Config::get('constants.QUESTION_URL') . '/' . $question->id . '/' . $question->slug ;
     	
@@ -90,7 +95,8 @@ class QuestionController extends Controller
         $question = Question::find($id);
         $question->asked_user = ($question->user)['name'];
         $question->asked_user_id = ($question->user)['id'];
-        $question->tags = explode(',', $question->tag) ;
+
+        $question->tags = $question->tag ;
         $question->asked_user_avatar = '/uploads/avatars/'. ($question->user)['avatar'];
 
         if (Auth::user()) {
@@ -103,8 +109,8 @@ class QuestionController extends Controller
 
         $question->formatted_created_at = $question->created_at->format('M-d-Y') . ' at ' . $question->created_at->format('h:i');
         
-        $question->votes = $this->countUpVoteByUserAndVoteId($id, ($question->user)['id'], Config::get('constants.VOTE_CATEGORY.QUESTION') )
-                           - $this->countDownVoteByUserAndVoteId($id, ($question->user)['id'], Config::get('constants.VOTE_CATEGORY.QUESTION') );
+        $question->votes = $this->countUpVoteByVoteId($id, Config::get('constants.VOTE_CATEGORY.QUESTION') )
+                           - $this->countDownVoteByVoteId($id, Config::get('constants.VOTE_CATEGORY.QUESTION') );
         return Response::json($question);
     }    
 
@@ -152,9 +158,118 @@ class QuestionController extends Controller
 
       $question_count = Question::count();
 
+      foreach ($questions as $key => $question) {
+        $questions[$key]->votes = $this->countUpVoteByVoteId($question->id, Config::get('constants.VOTE_CATEGORY.QUESTION') )
+                           - $this->countDownVoteByVoteId($question->id, Config::get('constants.VOTE_CATEGORY.QUESTION') );
+
+        $questions[$key]->answers = $this->countAnswerByQuestionId($question->id);
+
+      }
+
+      $top_tags = $this->getTopTags();
+
       return view('question.list', ['questions' => $questions, 'newest_questions' => $newest_questions
-                                    ,'question_count' => $question_count ]);
+                                    ,'question_count' => $question_count, 'top_tags' => $top_tags ]);
     }
+
+    public function showEditAnswer($id) {
+
+      $answer = Answer::find($id);
+
+      if (!Auth::check() || (Auth::user()->id != $answer->created_by)) {
+        return redirect('/questions/list');
+      }
+      
+      return view('question.edit_answer', ['answer' => $answer]);
+    }
+
+    public function showEditQuestion($id) {
+
+      $question = Question::find($id);
+
+      if (!Auth::check() || (Auth::user()->id != $question->created_by)) {
+        return redirect('/questions/list');
+      }
+      
+      $tags = [];
+
+      foreach ($question->tag as $key => $value) {
+        $tags[] = $value->name;
+      }
+      $question->tags = implode(',', $tags);
+      return view('question.edit_question', ['question' => $question]);
+    }
+
+    public function editQuestion() {
+      
+      $id = Input::get('id');
+
+      $question = Question::find($id);
+
+      $question->title = Input::get('title');
+
+      $question->slug = str_slug($question->title, '-');
+      
+      $question->content = Input::get('content');
+
+      $question->save();
+
+      foreach ($question->tag as $key => $value) {
+        $tag = Tag::find($value->id);
+        $tag->delete();
+      }
+      foreach (explode(',', strtolower(Input::get('tag'))) as $key => $value) {
+        $tag = new Tag;
+        $tag->name = $value;
+        $tag->question_id = $question->id;
+        $tag->save();
+      }
+
+      $question_url = Config::get('constants.QUESTION_URL') . '/' . $question->id . '/' . $question->slug ;
+      
+      return redirect($question_url);      
+
+    } 
+
+    public function editAnswer() {
+      $id = Input::get('id');
+
+      $answer = Answer::find($id);
+      $answer->content = Input::get('content');
+      $answer->save();
+
+      $question = Question::find($answer->question_id);
+      $question_url = Config::get('constants.QUESTION_URL') . '/' . $question->id . '/' . $question->slug ;
+      
+      return redirect($question_url);
+
+    }
+
+    public function showQuestionByTag($tag) {
+
+      $questions = Question::
+                  whereHas('tag', function ($query) use ($tag) {
+                      $query->where('name', '=', $tag);
+                  })
+                  ->orderBy('created_at', 'desc')->paginate(10);
+
+      $newest_questions = Question::orderBy('created_at', 'desc')->paginate(20);
+
+      $question_count = Question::count();
+
+      foreach ($questions as $key => $question) {
+        $questions[$key]->votes = $this->countUpVoteByVoteId($question->id, Config::get('constants.VOTE_CATEGORY.QUESTION') )
+                           - $this->countDownVoteByVoteId($question->id, Config::get('constants.VOTE_CATEGORY.QUESTION') );
+
+        $questions[$key]->answers = $this->countAnswerByQuestionId($question->id);        
+      }
+
+      $top_tags = $this->getTopTags();
+
+      return view('question.list', ['questions' => $questions, 'newest_questions' => $newest_questions
+                                    ,'question_count' => $question_count, 'top_tags' => $top_tags ]);
+    }
+
 
     public function showQuestionDetail($id,$slug) {
 
@@ -171,7 +286,10 @@ class QuestionController extends Controller
         	$question->save();
       	}
 
+        $newest_questions = Question::orderBy('created_at', 'desc')->paginate(20);
+
         return view('question.detail', ['question' => $question,
+                                        'newest_questions' => $newest_questions,
                                         'currentUserId' => $currentUserId,
                                         'isLogin' => $currentUserId > 0]);
     }
@@ -202,7 +320,7 @@ class QuestionController extends Controller
               ->where('vote_category', $vote_category)              
               ->count();
       return $up_vote;
-    }
+    }    
 
     protected function countDownVoteByUserAndVoteId($vote_id, $user_id, $vote_category ) {
       $up_vote = UserVotes::where('vote_id', $vote_id)
@@ -211,6 +329,45 @@ class QuestionController extends Controller
               ->where('vote_category', $vote_category)           
               ->count();
       return $up_vote;
+    }
+
+    protected function countUpVoteByVoteId($vote_id, $vote_category ) {
+      $up_vote = UserVotes::where('vote_id', $vote_id)
+              ->where('vote_type', Config::get('constants.VOTE_TYPE.UP_VOTE')) 
+              ->where('vote_category', $vote_category)              
+              ->count();
+      return $up_vote;
+    }
+
+    protected function countDownVoteByVoteId($vote_id, $vote_category ) {
+      $up_vote = UserVotes::where('vote_id', $vote_id)
+              ->where('vote_type', Config::get('constants.VOTE_TYPE.DOWN_VOTE'))   
+              ->where('vote_category', $vote_category)           
+              ->count();
+      return $up_vote;
+    }
+
+    protected function countAnswerByQuestionId($questionId) {
+
+      $answers = Answer::where('answers.question_id', $questionId)
+                ->count();        
+      return $answers;
+    }
+
+    protected function getTopTags() {
+
+      $tags = DB::table('tags')
+      ->select('name', DB::raw('count(question_id) as total'))
+      ->groupBy('name')
+      ->orderBy('total', 'desc')
+      ->paginate(10);
+
+      return $tags;
+    }
+
+    protected function setAllAnswersAcceptedToFalse($question_id) {
+      Answer::where('answers.question_id', $question_id)
+                ->update(['accepted' => false]);                
     }
 
     protected function undoVoted($user_voted) {
@@ -262,5 +419,25 @@ class QuestionController extends Controller
 
       return Response::json(['status' => true, 'votes' => $votes, 'up_voted' => $up_voted, 'down_voted' => $down_voted
                            ]);
+    }
+
+    public function acceptAnswer() {
+      $answer_id = Input::get('answer_id');
+      $question_id = Input::get('question_id');
+
+      $question = Question::find($question_id);
+      $anwser = Answer::find($answer_id);
+
+      if (Auth::user()->id != $question->created_by) {
+        return Response::json(['status' => false]);
+      }
+
+      $this->setAllAnswersAcceptedToFalse($question_id);
+            
+      $anwser->accepted = true;
+      $anwser->save();
+
+      
+      return Response::json(['status' => true]);
     }
 }

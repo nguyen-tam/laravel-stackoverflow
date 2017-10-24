@@ -12,7 +12,7 @@
 
 <ul class="nav nav-tabs">
   <li class="active"><a data-toggle="tab" href="#home">Edit Profile</a></li>
-  <li><a data-toggle="tab" href="#menu1">Activity</a></li>
+  <li><a data-toggle="tab" href="#activity">Activity</a></li>
 </ul>
 
 <div class="tab-content">
@@ -63,9 +63,26 @@
 
 
   </div>
-  <div id="menu1" class="tab-pane fade">
-    <h3>Menu 1</h3>
-    <p>Some content in menu 1.</p>
+  <div id="activity" class="tab-pane fade">
+    <div class="row">
+        <div class="col-lg-6">
+            <h3>Posted these questions</h3>
+            @foreach ($questions as $question)
+                <div>
+                    <a href="/question/{{ $question->id }}/{{ $question->slug }}">{{ $question->title }}</a>
+                </div>
+            @endforeach
+        </div>
+        <div class="col-lg-6">
+            <h3>Answered on these questions</h3>
+            @foreach ($answers as $answers)
+                <div>
+                    <a href="/question/{{ $answers->id }}/{{ $answers->slug }}">{{ $answers->title }}</a>
+                </div>
+            @endforeach
+        </div>
+    </div>
+    <div class="row"></div>
   </div>
 </div>
           

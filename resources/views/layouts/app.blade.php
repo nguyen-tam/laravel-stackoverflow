@@ -27,17 +27,22 @@
           <span class="icon-bar"></span>
           <span class="icon-bar"></span>
         </button>
-        <a class="navbar-brand" href="{{ url('/') }}">PHP - QA</a>
+        <a class="navbar-brand" href="{{ url('/') }}">LaraOverflow</a>
       </div>
       <!-- Collect the nav links, forms, and other content for toggling -->
       <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
         <ul class="nav navbar-nav navbar-right">
           <li>
-            <a href="{{ url('questions') }}">Questions</a>
+            <a href="{{ url('questions/list') }}">Questions</a>
+          </li>
+          @if (!Auth::guest())
+          <li>
+            <a href="{{ url('users/'. Auth::user()->id ) }}">Hello, {{ Auth::user()->name }}</a>
           </li>
           <li>
-            <a href="{{ url('users') }}">Users</a>
+            <a href="{{ url('logout') }}">Log out</a>
           </li>
+          @endif
 
           @if (Auth::guest())
             <li>

@@ -20,7 +20,7 @@ class CreateQuestionsTable extends Migration
             $table->text('slug');
             $table->integer('views')->default(0);
             $table->integer('status')->comment('0 => deleted, 1 => active, 2 => duplicated');
-            $table->string('tag')->nullable();
+            // $table->string('tag')->nullable();
             $table->integer('created_by');
             $table->timestamps();
         });

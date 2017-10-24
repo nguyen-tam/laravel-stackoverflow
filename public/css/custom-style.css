@@ -113,6 +113,10 @@ footer {
   color: #9199a1;
 }
 
+.text-brown {
+  color: #848d95;
+}
+
 .add-a-comment {
   color: #848d95;
   opacity : 0.6;
@@ -170,4 +174,12 @@ footer {
 
 .ask-question .questions-count {
   font-size: 26px;
+}
+
+.accepted {
+  color: #5eba7d;
+}
+
+.voted {
+  color: #f48024;
 }
