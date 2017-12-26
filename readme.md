@@ -20,3 +20,11 @@ This is a Stackoverflow clone source code build based on Laravel, Vue and Anxios
 <pre>
   <code>`php artisan migrate:refresh --seed`</code>
 </pre>
+<h6>Vue install</h6>
+<pre>
+  <code>`yarn install`</code>
+</pre>
+<h6>Watch Vue files changes</h6>
+<pre>
+  <code>`yarn run watch`</code>
+</pre>
