@@ -83,7 +83,7 @@
             
             @foreach ($newest_questions as $question)
             <div class="item">
-              <a href="#" class="title">{{ $question->title }}</a>
+              <a href="/questions/{{ $question->id }}/{{ $question->slug }}" class="title">{{ $question->title }}</a>
             </div>
             @endforeach
             

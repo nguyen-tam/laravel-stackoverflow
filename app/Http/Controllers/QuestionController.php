@@ -25,7 +25,12 @@ class QuestionController extends Controller
 
     public function showAsk()
     {
-        return view('question.ask');
+        if (Auth::user()) {
+          return view('question.ask');
+        } else {
+          return redirect("/login");
+        }
+        
     }
 
     public function ask()
